@@ -7,7 +7,7 @@ provider "aws" {
 
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
-  version = "3.10.0"
+  version = "5.2.0"
 
   name                 = "production-vpc"
   cidr                 = "10.0.0.0/16"
@@ -88,10 +88,10 @@ resource "aws_alb" "app_alb" {
 
   enable_deletion_protection = true
 
-  tags = {
-    Terraform = "true"
-    Environment = "production"
-  }
+  #tags = {
+   # Terraform = "true"
+    #Environment = "production"
+  #}
 }
 
 resource "aws_alb_target_group" "app_tg" {
@@ -127,8 +127,8 @@ resource "aws_alb_listener" "http_listener" {
 
 resource "aws_launch_configuration" "app_lc" {
   name          = "app-lc"
-  image_id      = "ami-12345678"  # Replace with your AMI ID
-  instance_type = "t3.micro"
+  image_id      = "ami-a0cfeed8"  # Replace with your AMI ID
+  instance_type = "t2.micro"
 
   security_groups = [aws_security_group.ec2_sg.id]
 
@@ -142,10 +142,6 @@ resource "aws_launch_configuration" "app_lc" {
               sudo systemctl start nginx
               EOF
 
-  tags = {
-    Terraform = "true"
-    Environment = "production"
-  }
 }
 
 resource "aws_autoscaling_group" "app_asg" {
@@ -163,21 +159,18 @@ resource "aws_autoscaling_group" "app_asg" {
     propagate_at_launch = true
   }
 
-  tags = {
-    Terraform = "true"
-    Environment = "production"
-  }
 }
 
 resource "aws_db_instance" "app_db" {
   identifier              = "app-db"
   engine                  = "mysql"
+  engine_version          = "8.0"
   instance_class          = "db.t3.micro"
   allocated_storage       = 20
-  name                    = "appdb"
+  db_name                    = "appdb"
   username                = "admin"
   password                = "yourpassword"
-  parameter_group_name    = "default.mysql5.7"
+  parameter_group_name    = "default.mysql8.0"
   multi_az                = true
   publicly_accessible     = false
   skip_final_snapshot     = true
@@ -201,7 +194,7 @@ resource "aws_db_subnet_group" "app_db_subnet" {
 }
 
 resource "aws_s3_bucket" "logs_bucket" {
-  bucket = "app-logs-bucket"
+  bucket = "cap18-app-logs-bucket"
   acl    = "private"
 
   tags = {

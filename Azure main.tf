@@ -7,7 +7,7 @@ provider "azurerm" {
 
 resource "azurerm_resource_group" "main" {
   name     = "rg-microservice-production"
-  location = "East US"
+  location = "Italy North"
 }
 
 resource "azurerm_virtual_network" "main" {
@@ -125,6 +125,7 @@ resource "azurerm_application_gateway" "app_gateway" {
   request_routing_rule {
     name                       = "rule1"
     rule_type                  = "Basic"
+    priority                   =  9
     http_listener_name         = "appGatewayHttpListener"
     backend_address_pool_name  = "appGatewayBackendPool"
     backend_http_settings_name = "appGatewayBackendHttpSettings"
@@ -177,11 +178,10 @@ resource "azurerm_virtual_machine_scale_set" "app_vmss" {
     }
   }
 
-  health_probe_id = azurerm_application_gateway.app_gateway.probes[0].id
 }
 
 resource "azurerm_sql_server" "main" {
-  name                         = "sqlserver-app"
+  name                         = "sqlserver-terr"
   resource_group_name          = azurerm_resource_group.main.name
   location                     = azurerm_resource_group.main.location
   version                      = "12.0"
@@ -194,7 +194,7 @@ resource "azurerm_sql_server" "main" {
 }
 
 resource "azurerm_sql_database" "main" {
-  name                = "sqldb-app"
+  name                = "sqldb-terr"
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
   server_name         = azurerm_sql_server.main.name
@@ -207,7 +207,7 @@ resource "azurerm_sql_database" "main" {
 }
 
 resource "azurerm_storage_account" "log_storage" {
-  name                     = "logstorageapp"
+  name                     = "logterrstorageapp"
   resource_group_name      = azurerm_resource_group.main.name
   location                 = azurerm_resource_group.main.location
   account_tier             = "Standard"
@@ -236,10 +236,10 @@ resource "azurerm_monitor_log_profile" "main" {
   locations = [azurerm_resource_group.main.location]
 }
 
+data "azurerm_client_config" "terratest" {}
+
 resource "azurerm_role_assignment" "log_storage_assignment" {
   scope              = azurerm_storage_account.log_storage.id
   role_definition_name = "Storage Blob Data Contributor"
-  principal_id       = data.azurerm_client_config.example.service_principal_object_id
+  principal_id       = data.azurerm_client_config.terratest.object_id
 }
-
-data "azurerm_client_config" "example" {}
